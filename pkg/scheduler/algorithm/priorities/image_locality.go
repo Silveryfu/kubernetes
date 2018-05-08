@@ -22,6 +22,7 @@ import (
 	"k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 	"k8s.io/kubernetes/pkg/scheduler/schedulercache"
+	"github.com/golang/glog"
 )
 
 // This is a reasonable size range of all container images. 90%ile of images on dockerhub drops into this range.
@@ -42,7 +43,7 @@ func ImageLocalityPriorityMap(pod *v1.Pod, meta interface{}, nodeInfo *scheduler
 		return schedulerapi.HostPriority{}, fmt.Errorf("node not found")
 	}
 
-	sumSize := totalImageSize(node, pod.Spec.Containers)
+	sumSize := totalImageSize(nodeInfo, pod.Spec.Containers)
 
 	return schedulerapi.HostPriority{
 		Host:  node.Name,
@@ -69,15 +70,10 @@ func calculateScoreFromSize(sumSize int64) int {
 }
 
 // totalImageSize returns the total image size of all the containers that are already on the node.
-func totalImageSize(node *v1.Node, containers []v1.Container) int64 {
-	imageSizes := make(map[string]int64)
-	for _, image := range node.Status.Images {
-		for _, name := range image.Names {
-			imageSizes[name] = image.SizeBytes
-		}
-	}
-
+func totalImageSize(nodeInfo *schedulercache.NodeInfo, containers []v1.Container) int64 {
 	var total int64
+
+	imageSizes := nodeInfo.Images()
 	for _, container := range containers {
 		if size, ok := imageSizes[container.Image]; ok {
 			total += size
