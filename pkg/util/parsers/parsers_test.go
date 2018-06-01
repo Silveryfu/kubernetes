@@ -49,3 +49,28 @@ func TestParseImageName(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFullImageName(t *testing.T) {
+	testCases := []struct {
+		Input        string
+		ExpectedName string
+	}{
+		{Input: "root", ExpectedName: "docker.io/library/root:latest"},
+		{Input: "root:tag", ExpectedName: "docker.io/library/root:tag"},
+		{Input: "root@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", ExpectedName: "docker.io/library/root@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+		{Input: "user/repo", ExpectedName: "docker.io/user/repo:latest"},
+		{Input: "user/repo:tag", ExpectedName: "docker.io/user/repo:tag"},
+		{Input: "user/repo@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", ExpectedName: "docker.io/user/repo@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+		{Input: "url:5000/repo", ExpectedName: "url:5000/repo:latest"},
+		{Input: "url:5000/repo:tag", ExpectedName: "url:5000/repo:tag"},
+		{Input: "url:5000/repo@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", ExpectedName: "url:5000/repo@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+	}
+	for _, testCase := range testCases {
+		name, err := GetFullImageName(testCase.Input)
+		if err != nil {
+			t.Errorf("GetFullImageName(%s) failed: %v", testCase.Input, err)
+		} else if testCase.ExpectedName != name {
+			t.Errorf("expected %#v, got %#v", testCase.ExpectedName, testCase.Input)
+		}
+	}
+}

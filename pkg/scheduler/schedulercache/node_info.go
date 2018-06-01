@@ -29,6 +29,7 @@ import (
 	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
 	priorityutil "k8s.io/kubernetes/pkg/scheduler/algorithm/priorities/util"
 	"k8s.io/kubernetes/pkg/scheduler/util"
+	"k8s.io/kubernetes/pkg/util/parsers"
 )
 
 var (
@@ -541,7 +542,13 @@ func (n *NodeInfo) updateImageSizes() {
 	imageSizes := make(map[string]int64)
 	for _, image := range node.Status.Images {
 		for _, name := range image.Names {
-			imageSizes[name] = image.SizeBytes
+			// TODO: this wrapper is not needed after #64413 is fixed
+			fullName, err := parsers.GetFullImageName(name)
+			if err != nil {
+				glog.Warningf("Skipped misnamed image: %s", name)
+			} else {
+				imageSizes[fullName] = image.SizeBytes
+			}
 		}
 	}
 	n.imageSizes = imageSizes

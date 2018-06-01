@@ -18,10 +18,11 @@ package priorities
 
 import (
 	"fmt"
-
+	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 	"k8s.io/kubernetes/pkg/scheduler/schedulercache"
+	"k8s.io/kubernetes/pkg/util/parsers"
 )
 
 // This is a reasonable size range of all container images. 90%ile of images on dockerhub drops into this range.
@@ -74,7 +75,10 @@ func totalImageSize(nodeInfo *schedulercache.NodeInfo, containers []v1.Container
 
 	imageSizes := nodeInfo.ImageSizes()
 	for _, container := range containers {
-		if size, ok := imageSizes[container.Image]; ok {
+		name, err := parsers.GetFullImageName(container.Image)
+		if err != nil {
+			glog.Warningf("Skipped misnamed image: %s", container.Image)
+		} else if size, ok := imageSizes[name]; ok {
 			total += size
 		}
 	}

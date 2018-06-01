@@ -56,3 +56,15 @@ func ParseImageName(image string) (string, string, string, error) {
 	}
 	return repoToPull, tag, digest, nil
 }
+
+// GetFullImageName parses a docker image string to its fully qualified name.
+func GetFullImageName(image string) (string, error) {
+	repo, tag, digest, err := ParseImageName(image)
+	if err != nil {
+		return "", err
+	}
+	if len(tag) != 0 {
+		return repo + ":" + tag, nil
+	}
+	return repo + "@" + digest, nil
+}
