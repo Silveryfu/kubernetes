@@ -1,4 +1,4 @@
-package cm
+package cpumanager
 
 import (
 	"fmt"
